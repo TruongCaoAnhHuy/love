@@ -18,14 +18,14 @@
     }
 
     .text-wrapper {
-        height: 480px;
+        height: 100%;
     }
 
     .ml14 {
-        font-size: 34px;
+        font-size: 30px;
     }
 
     .footer {
-        margin-top: 35px;
+        margin-top: 30px;
     } 
 }

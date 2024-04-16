@@ -1,0 +1,31 @@
+@media (max-width: 739px) {
+
+    .modal_show {
+        width: 80vw;
+        height: 80vh;
+    }
+
+    @keyframes zoom {
+        0% {
+            width: 0;
+            height: 0; 
+        }
+    
+        100% {
+            width: 80vw;
+            height: 80vh;
+        }
+    }
+
+    .text-wrapper {
+        height: 480px;
+    }
+
+    .ml14 {
+        font-size: 34px;
+    }
+
+    .footer {
+        margin-top: 35px;
+    } 
+}

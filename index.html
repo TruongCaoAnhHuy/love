@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Love</title>
+    <link rel="shortcut icon" type="image/png" href="./assets/img/heart_favicon.png"/>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://icono-49d6.kxcdn.com/icono.min.css">
+
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <link rel="stylesheet" href="./assets/css/responsive.css">
+</head>
+<body>
+    <audio autoplay loop preload="auto" class="audio">
+        <source src="./assets/audios/beat4.mp3">
+    </audio>
+    <canvas id="canvas" class="canvas" width="1400" height="600"></canvas>
+    <div class="modal">
+        <div class="header">
+            <div class="title">Letter for you</div>
+            <div class="close_modal">
+                <i class="fa-solid fa-xmark close_modal_icon"></i>
+            </div>
+        </div>
+        <div class="page_num">
+            <div id="num_page">1</div>/
+            <div id="total_page">1</div>
+        </div>
+        <h1 class="ml14">
+            <span class="text-wrapper">
+                <span class="letters" id="letter">
+                    Text
+                </span>
+                <span class="line"></span>
+            </span>
+        </h1>
+        <div class="footer">
+            <p class="sign_title">Sign</p>
+            <p class="sign_name">Your student &#60;3</p>
+        </div>
+        <div class="change-page_btn">
+            <div class="prev_btn">
+                <i class="fa-solid fa-chevron-left"></i>
+            </div>
+            <div class="next_btn">
+                <i class="fa-solid fa-chevron-right"></i>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.0.1/lib/anime.min.js"></script>
+<script src="./assets/js/main.js"></script>
+</html>

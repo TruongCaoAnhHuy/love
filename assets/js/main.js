@@ -329,7 +329,7 @@ function stars() {
     document.body.appendChild(e);
 
     // Tính toán vị trí và kích thước phản ứng
-    let randomLeft = Math.random() *65; // Tính toán vị trí theo phần trăm chiều rộng
+    let randomLeft = Math.random() *55; // Tính toán vị trí theo phần trăm chiều rộng
     let randomTop = Math.random() * 1000; // Tính toán vị trí theo phần trăm chiều cao
     e.style.left = randomLeft + "%";
     e.style.top = randomTop + "%" - 50;

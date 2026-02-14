@@ -247,10 +247,11 @@ body {
 #startBtn {
   padding: 15px 30px;
   font-size: 20px;
-  background: #e91e63;
+  background: #f24780;
   color: white;
   border: none;
   border-radius: 50px;
   cursor: pointer;
   box-shadow: 0 0 15px #e91e63;
+  text-shadow: 1px 1px 6px #00000050;
 }

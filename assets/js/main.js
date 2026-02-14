@@ -285,11 +285,13 @@ const closeModalBtn = document.getElementsByClassName("close_modal_icon");
 // Xử lý màn hình chào mừng
 const startBtn = document.getElementById("startBtn");
 const introOverlay = document.getElementById("intro-overlay");
-const music = document.getElementById("player");
+const audio = document.getElementById("player");
+
+audio.volume = 0.3;
 
 startBtn.addEventListener("click", () => {
   // 1. Phát nhạc ngay lập tức (Trình duyệt cho phép vì người dùng đã click)
-  music
+  audio
     .play()
     .then(() => {
       console.log("Nhạc đang phát!");
@@ -312,7 +314,6 @@ startBtn.addEventListener("click", () => {
 
 // nhạc
 // --- PHẦN XỬ LÝ NHẠC NỀN ---
-const audio = document.getElementById("player");
 
 // 1. Cố gắng phát ngay lập tức khi tải trang
 window.onload = function () {

@@ -1,19 +1,17 @@
+// --- KHỞI TẠO WEBGL CANVAS (GIỮ NGUYÊN CODE CŨ) ---
 var canvas = document.getElementById("canvas");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// Initialize the GL context
 var gl = canvas.getContext("webgl");
 if (!gl) {
   console.error("Unable to initialize WebGL.");
 }
 
-//Time
 var time = 0.0;
 
-//************** Shader sources **************
-
+//************** Shader sources (GIỮ NGUYÊN) **************
 var vertexSource = `
 attribute vec2 position;
 void main() {
@@ -23,49 +21,37 @@ void main() {
 
 var fragmentSource = `
 precision highp float;
-
 uniform float width;
 uniform float height;
 vec2 resolution = vec2(width, height);
-
 uniform float time;
-
 #define POINT_COUNT 8
-
 vec2 points[POINT_COUNT];
 const float speed = -0.5;
 const float len = 0.25;
 float intensity = 0.9;
 float radius = 0.015;
 
-//https://www.shadertoy.com/view/MlKcDD
-//Signed distance to a quadratic bezier
 float sdBezier(vec2 pos, vec2 A, vec2 B, vec2 C){    
   vec2 a = B - A;
   vec2 b = A - 2.0*B + C;
   vec2 c = a * 2.0;
   vec2 d = A - pos;
-
   float kk = 1.0 / dot(b,b);
   float kx = kk * dot(a,b);
   float ky = kk * (2.0*dot(a,a)+dot(d,b)) / 3.0;
   float kz = kk * dot(d,a);      
-
   float res = 0.0;
-
   float p = ky - kx*kx;
   float p3 = p*p*p;
   float q = kx*(2.0*kx*kx - 3.0*ky) + kz;
   float h = q*q + 4.0*p3;
-
   if(h >= 0.0){ 
     h = sqrt(h);
     vec2 x = (vec2(h, -h) - q) / 2.0;
     vec2 uv = sign(x)*pow(abs(x), vec2(1.0/3.0));
     float t = uv.x + uv.y - kx;
     t = clamp( t, 0.0, 1.0 );
-
-    // 1 root
     vec2 qos = d + (c + b*t)*t;
     res = length(qos);
   }else{
@@ -75,36 +61,26 @@ float sdBezier(vec2 pos, vec2 A, vec2 B, vec2 C){
     float n = sin(v)*1.732050808;
     vec3 t = vec3(m + m, -n - m, n - m) * z - kx;
     t = clamp( t, 0.0, 1.0 );
-
-    // 3 roots
     vec2 qos = d + (c + b*t.x)*t.x;
     float dis = dot(qos,qos);
-    
     res = dis;
-
     qos = d + (c + b*t.y)*t.y;
     dis = dot(qos,qos);
     res = min(res,dis);
-    
     qos = d + (c + b*t.z)*t.z;
     dis = dot(qos,qos);
     res = min(res,dis);
-
     res = sqrt( res );
   }
-  
   return res;
 }
 
-
-//http://mathworld.wolfram.com/HeartCurve.html
 vec2 getHeartPosition(float t){
   return vec2(16.0 * sin(t) * sin(t) * sin(t),
               -(13.0 * cos(t) - 5.0 * cos(2.0*t)
               - 2.0 * cos(3.0*t) - cos(4.0*t)));
 }
 
-//https://www.shadertoy.com/view/3s3GDn
 float getGlow(float dist, float radius, float intensity){
   return pow(radius/dist, intensity);
 }
@@ -113,13 +89,10 @@ float getSegment(float t, vec2 pos, float offset, float scale){
   for(int i = 0; i < POINT_COUNT; i++){
     points[i] = getHeartPosition(offset + float(i)*len + fract(speed * t) * 6.28);
   }
-  
   vec2 c = (points[0] + points[1]) / 2.0;
   vec2 c_prev;
   float dist = 10000.0;
-  
   for(int i = 0; i < POINT_COUNT-1; i++){
-    //https://tinyurl.com/y2htbwkm
     c_prev = c;
     c = (points[i] + points[i+1]) / 2.0;
     dist = min(dist, sdBezier(pos, scale * c_prev, scale * points[i], scale * c));
@@ -133,44 +106,25 @@ void main(){
   vec2 centre = vec2(0.5, 0.5);
   vec2 pos = centre - uv;
   pos.y /= widthHeightRatio;
-  //Shift upwards to centre heart
   pos.y += 0.02;
   float scale = 0.000015 * height;
-  
   float t = time;
-  
-  //Get first segment
   float dist = getSegment(t, pos, 0.0, scale);
   float glow = getGlow(dist, radius, intensity);
-  
   vec3 col = vec3(0.0);
-  
-  //White core
   col += 10.0*vec3(smoothstep(0.003, 0.001, dist));
-  //Pink glow
   col += glow * vec3(0.94,0.14,0.4);
-  
-  //Get second segment
   dist = getSegment(t, pos, 3.4, scale);
   glow = getGlow(dist, radius, intensity);
-  
-  //White core
   col += 10.0*vec3(smoothstep(0.003, 0.001, dist));
-  //Blue glow
   col += glow * vec3(0.2,0.6,1.0);
-    
-  //Tone mapping
   col = 1.0 - exp(-col);
-
-  //Output to screen
   gl_FragColor = vec4(col,1.0);
 }
 `;
 
 //************** Utility functions **************
-
 window.addEventListener("resize", onWindowResize, false);
-
 function onWindowResize() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -179,7 +133,6 @@ function onWindowResize() {
   gl.uniform1f(heightHandle, window.innerHeight);
 }
 
-//Compile shader and combine with source
 function compileShader(shaderSource, shaderType) {
   var shader = gl.createShader(shaderType);
   gl.shaderSource(shader, shaderSource);
@@ -190,8 +143,6 @@ function compileShader(shaderSource, shaderType) {
   return shader;
 }
 
-//From https://codepen.io/jlfwong/pen/GqmroZ
-//Utility to complain loudly if we fail to find the attribute/uniform
 function getAttribLocation(program, name) {
   var attributeLocation = gl.getAttribLocation(program, name);
   if (attributeLocation === -1) {
@@ -209,123 +160,81 @@ function getUniformLocation(program, name) {
 }
 
 //************** Create shaders **************
-
-//Create vertex and fragment shaders
 var vertexShader = compileShader(vertexSource, gl.VERTEX_SHADER);
 var fragmentShader = compileShader(fragmentSource, gl.FRAGMENT_SHADER);
-
-//Create shader programs
 var program = gl.createProgram();
 gl.attachShader(program, vertexShader);
 gl.attachShader(program, fragmentShader);
 gl.linkProgram(program);
-
 gl.useProgram(program);
 
-//Set up rectangle covering entire canvas
-var vertexData = new Float32Array([
-  -1.0,
-  1.0, // top left
-  -1.0,
-  -1.0, // bottom left
-  1.0,
-  1.0, // top right
-  1.0,
-  -1.0, // bottom right
-]);
-
-//Create vertex buffer
+var vertexData = new Float32Array([-1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0]);
 var vertexDataBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, vertexDataBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
-
-// Layout of our data in the vertex buffer
 var positionHandle = getAttribLocation(program, "position");
-
 gl.enableVertexAttribArray(positionHandle);
-gl.vertexAttribPointer(
-  positionHandle,
-  2, // position is a vec2 (2 values per component)
-  gl.FLOAT, // each component is a float
-  false, // don't normalize values
-  2 * 4, // two 4 byte float components per vertex (32 bit float is 4 bytes)
-  0, // how many bytes inside the buffer to start from
-);
+gl.vertexAttribPointer(positionHandle, 2, gl.FLOAT, false, 2 * 4, 0);
 
-//Set uniform handle
 var timeHandle = getUniformLocation(program, "time");
 var widthHandle = getUniformLocation(program, "width");
 var heightHandle = getUniformLocation(program, "height");
-
 gl.uniform1f(widthHandle, window.innerWidth);
 gl.uniform1f(heightHandle, window.innerHeight);
 
 var lastFrame = Date.now();
 var thisFrame;
-
 function draw() {
-  //Update time
   thisFrame = Date.now();
   time += (thisFrame - lastFrame) / 1000;
   lastFrame = thisFrame;
-
-  //Send uniforms to program
   gl.uniform1f(timeHandle, time);
-  //Draw a triangle strip connecting vertices 0-4
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
   requestAnimationFrame(draw);
 }
-
 draw();
 
-// --- BẮT ĐẦU PHẦN LOGIC GIAO DIỆN & NHẠC ---
+// ---------------------------------------------------------
+// --- PHẦN LOGIC QUAN TRỌNG: NHẠC VÀ MỞ QUÀ ---
+// ---------------------------------------------------------
 
-const modal = document.getElementsByClassName("modal");
-const closeModalBtn = document.getElementsByClassName("close_modal_icon");
-
-// --- PHẦN XỬ LÝ NHẠC CHO IPHONE (MỚI) ---
+const modal = document.querySelector(".modal");
+const closeModalBtn = document.querySelector(".close_modal_icon");
 const audio = document.getElementById("player");
 const startBtn = document.getElementById("startBtn");
 const introOverlay = document.getElementById("intro-overlay");
 
 // Cấu hình nhạc
 audio.loop = true;
-audio.volume = 0.3; // Chỉnh âm lượng (iPhone sẽ bỏ qua cái này)
+audio.volume = 0.5;
 
-// Biến kiểm tra đã phát nhạc chưa
-let isAudioUnlocked = false;
-
-// Hàm mở khóa âm thanh "thần thánh"
+// Hàm mở khóa âm thanh
 function unlockAudio() {
-  if (isAudioUnlocked) return; // Nếu đã phát được rồi thì thôi
-
   // Thử phát nhạc
   audio
     .play()
     .then(() => {
-      // NẾU THÀNH CÔNG (Mở khóa được)
       console.log("Đã phát nhạc thành công!");
-      isAudioUnlocked = true;
-
-      // Gỡ bỏ các sự kiện lắng nghe để web nhẹ hơn
+      // Nếu phát được thì gỡ sự kiện touchstart để đỡ nặng
       document.removeEventListener("touchstart", unlockAudio);
-      document.removeEventListener("click", unlockAudio);
-      document.removeEventListener("scroll", unlockAudio);
     })
     .catch((error) => {
-      // NẾU THẤT BẠI (Vẫn bị chặn)
-      console.log("Chờ tương tác tiếp theo...");
+      console.log(
+        "Chưa phát được nhạc (lỗi trình duyệt chặn), đợi tương tác tiếp theo...",
+      );
     });
 }
 
-// 1. Xử lý nút "Mở quà" (Ưu tiên số 1)
+// 1. KHI BẤM NÚT "MỞ QUÀ"
 if (startBtn) {
   startBtn.addEventListener("click", () => {
+    // Phát nhạc
     unlockAudio();
+
     // Ẩn màn hình chào
     if (introOverlay) {
       introOverlay.style.opacity = "0";
+      // Đợi 1 giây hiệu ứng mờ rồi mới ẩn hẳn
       setTimeout(() => {
         introOverlay.style.display = "none";
       }, 1000);
@@ -333,13 +242,15 @@ if (startBtn) {
   });
 }
 
-// 2. "BẪY" SỰ KIỆN TOÀN MÀN HÌNH (Cứu cánh cho iPhone)
-// Bất cứ chạm, click, hay cuộn trang nào cũng sẽ kích hoạt nhạc
-document.addEventListener("touchstart", unlockAudio, { passive: false });
-document.addEventListener("click", unlockAudio);
-document.addEventListener("scroll", unlockAudio);
+// 2. BACKUP: BẮT SỰ KIỆN CHẠM MÀN HÌNH (DÀNH CHO IPHONE NẾU NÚT BẤM LỖI)
+// Chỉ cần chạm vào bất cứ đâu sau khi tải trang, nhạc sẽ thử phát
+document.addEventListener("touchstart", unlockAudio, { once: true });
+document.addEventListener("click", unlockAudio, { once: true });
 
-// --- PHẦN NỘI DUNG THƯ ---
+// ---------------------------------------------------------
+// --- PHẦN NỘI DUNG BỨC THƯ ---
+// ---------------------------------------------------------
+
 const textArr = [
   {
     page: "1",
@@ -363,16 +274,16 @@ const textArr = [
   },
   {
     page: "6",
-    text: `Anh sẽ cố gắng để cục dàng không phải chờ anh quá lâu đâu. Valentines vui vẻ nha cục dàng yêu dấu của tuiii. Anh yêu em. Nợ nhau một bủi đi chơi nhá :))))
-      `,
+    text: `Anh sẽ cố gắng để cục dàng không phải chờ anh quá lâu đâu. Valentines vui vẻ nha cục dàng yêu dấu của tuiii. Anh yêu em. Nợ nhau một bủi đi chơi nhá :))))`,
   },
 ];
 
-closeModalBtn[0].onclick = () => {
-  modal[0].classList.remove("modal_show");
+// Nút đóng modal
+closeModalBtn.onclick = () => {
+  modal.classList.remove("modal_show");
 };
 
-// --- HÀM SAO RƠI ---
+// Hàm sao rơi + Click vào sao mở thư
 function stars() {
   let e = document.createElement("div");
   let size = Math.random() * 12;
@@ -386,49 +297,48 @@ function stars() {
   e.style.left = randomLeft + "%";
   e.style.top = randomTop + "%" - 50;
   e.style.fontSize = 20 + size + "px";
-
   e.style.animationDuration = 4 + duration + "s";
 
+  // SỰ KIỆN CLICK VÀO NGÔI SAO
   e.onclick = () => {
     const textLetter = document.getElementById("letter");
     const numPage = document.getElementById("num_page");
     const totalPage = document.getElementById("total_page");
+    const prevBtn = document.querySelector(".prev_btn");
+    const nextBtn = document.querySelector(".next_btn");
 
-    const prevBtn = document.getElementsByClassName("prev_btn");
-    const nextBtn = document.getElementsByClassName("next_btn");
+    let count = 0; // Luôn bắt đầu từ trang 1
 
-    // Đặt lại trang về 0 khi mở sao
-    let count = 0;
+    // Hàm cập nhật nội dung
+    const updateContent = (index) => {
+      textLetter.innerHTML = textArr[index].text;
+      numPage.innerHTML = textArr[index].page;
+      totalPage.innerHTML = textArr.length;
+      textAnimation(); // Gọi hiệu ứng chữ
+    };
 
-    textLetter.innerHTML = textArr[count].text;
-    numPage.innerHTML = textArr[count].page;
-    totalPage.innerHTML = textArr.length;
-
-    // Gọi hiệu ứng chữ (Đã sửa lỗi)
-    textAnimation();
+    // Khởi tạo trang đầu
+    updateContent(count);
 
     // Xử lý nút Next
-    nextBtn[0].onclick = () => {
+    // Dùng onmouseup thay vì onclick để fix lỗi double click
+    nextBtn.onmouseup = () => {
       if (count < textArr.length - 1) {
-        // Sửa logic: chỉ tăng nếu chưa phải trang cuối
         count++;
-        textLetter.innerHTML = textArr[count].text;
-        numPage.innerHTML = textArr[count].page;
-        textAnimation();
+        updateContent(count);
       }
     };
 
     // Xử lý nút Prev
-    prevBtn[0].onclick = () => {
+    prevBtn.onmouseup = () => {
       if (count > 0) {
         count--;
-        textLetter.innerHTML = textArr[count].text;
-        numPage.innerHTML = textArr[count].page;
-        textAnimation();
+        updateContent(count);
       }
     };
 
-    modal[0].classList.add("modal_show");
+    // Hiện modal
+    modal.classList.add("modal_show");
   };
 
   setTimeout(function () {
@@ -440,18 +350,16 @@ setInterval(function () {
   stars();
 }, 500);
 
-// --- HÀM HIỆU ỨNG CHỮ (ĐÃ SỬA LỖI) ---
+// --- HÀM HIỆU ỨNG CHỮ (ANIME.JS) ---
 const textAnimation = () => {
   const textWrapper = document.querySelector(".ml14 .letters");
-
-  // Lấy nội dung trực tiếp từ HTML để tránh lỗi biến
   const currentHTML = textWrapper.innerHTML;
 
-  // Nếu có thẻ HTML (icon, img) thì KHÔNG chạy replace
+  // Nếu có thẻ HTML (icon, img) thì KHÔNG tách chữ
   if (currentHTML.includes("<")) {
     textWrapper.innerHTML = currentHTML;
   } else {
-    // Nếu là chữ thường -> chạy hiệu ứng tách chữ
+    // Tách chữ để tạo hiệu ứng
     textWrapper.innerHTML = textWrapper.textContent.replace(
       /\S/g,
       "<span class='letter'>$&</span>",
@@ -469,7 +377,7 @@ const textAnimation = () => {
       duration: 500,
     })
     .add({
-      targets: ".ml14 .letter, .ml14 .letters, .icon_heart", // Thêm target để bắt cả cụm
+      targets: ".ml14 .letter, .ml14 .letters, .icon_heart",
       opacity: [0, 1],
       translateX: [40, 0],
       translateZ: 0,

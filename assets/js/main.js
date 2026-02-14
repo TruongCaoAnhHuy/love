@@ -17,7 +17,7 @@ var time = 0.0;
 var vertexSource = `
 attribute vec2 position;
 void main() {
-	gl_Position = vec4(position, 0.0, 1.0);
+  gl_Position = vec4(position, 0.0, 1.0);
 }
 `;
 
@@ -41,129 +41,129 @@ float radius = 0.015;
 //https://www.shadertoy.com/view/MlKcDD
 //Signed distance to a quadratic bezier
 float sdBezier(vec2 pos, vec2 A, vec2 B, vec2 C){    
-	vec2 a = B - A;
-	vec2 b = A - 2.0*B + C;
-	vec2 c = a * 2.0;
-	vec2 d = A - pos;
+  vec2 a = B - A;
+  vec2 b = A - 2.0*B + C;
+  vec2 c = a * 2.0;
+  vec2 d = A - pos;
 
-	float kk = 1.0 / dot(b,b);
-	float kx = kk * dot(a,b);
-	float ky = kk * (2.0*dot(a,a)+dot(d,b)) / 3.0;
-	float kz = kk * dot(d,a);      
+  float kk = 1.0 / dot(b,b);
+  float kx = kk * dot(a,b);
+  float ky = kk * (2.0*dot(a,a)+dot(d,b)) / 3.0;
+  float kz = kk * dot(d,a);      
 
-	float res = 0.0;
+  float res = 0.0;
 
-	float p = ky - kx*kx;
-	float p3 = p*p*p;
-	float q = kx*(2.0*kx*kx - 3.0*ky) + kz;
-	float h = q*q + 4.0*p3;
+  float p = ky - kx*kx;
+  float p3 = p*p*p;
+  float q = kx*(2.0*kx*kx - 3.0*ky) + kz;
+  float h = q*q + 4.0*p3;
 
-	if(h >= 0.0){ 
-		h = sqrt(h);
-		vec2 x = (vec2(h, -h) - q) / 2.0;
-		vec2 uv = sign(x)*pow(abs(x), vec2(1.0/3.0));
-		float t = uv.x + uv.y - kx;
-		t = clamp( t, 0.0, 1.0 );
+  if(h >= 0.0){ 
+    h = sqrt(h);
+    vec2 x = (vec2(h, -h) - q) / 2.0;
+    vec2 uv = sign(x)*pow(abs(x), vec2(1.0/3.0));
+    float t = uv.x + uv.y - kx;
+    t = clamp( t, 0.0, 1.0 );
 
-		// 1 root
-		vec2 qos = d + (c + b*t)*t;
-		res = length(qos);
-	}else{
-		float z = sqrt(-p);
-		float v = acos( q/(p*z*2.0) ) / 3.0;
-		float m = cos(v);
-		float n = sin(v)*1.732050808;
-		vec3 t = vec3(m + m, -n - m, n - m) * z - kx;
-		t = clamp( t, 0.0, 1.0 );
+    // 1 root
+    vec2 qos = d + (c + b*t)*t;
+    res = length(qos);
+  }else{
+    float z = sqrt(-p);
+    float v = acos( q/(p*z*2.0) ) / 3.0;
+    float m = cos(v);
+    float n = sin(v)*1.732050808;
+    vec3 t = vec3(m + m, -n - m, n - m) * z - kx;
+    t = clamp( t, 0.0, 1.0 );
 
-		// 3 roots
-		vec2 qos = d + (c + b*t.x)*t.x;
-		float dis = dot(qos,qos);
-        
-		res = dis;
-
-		qos = d + (c + b*t.y)*t.y;
-		dis = dot(qos,qos);
-		res = min(res,dis);
-		
-		qos = d + (c + b*t.z)*t.z;
-		dis = dot(qos,qos);
-		res = min(res,dis);
-
-		res = sqrt( res );
-	}
+    // 3 roots
+    vec2 qos = d + (c + b*t.x)*t.x;
+    float dis = dot(qos,qos);
     
-	return res;
+    res = dis;
+
+    qos = d + (c + b*t.y)*t.y;
+    dis = dot(qos,qos);
+    res = min(res,dis);
+    
+    qos = d + (c + b*t.z)*t.z;
+    dis = dot(qos,qos);
+    res = min(res,dis);
+
+    res = sqrt( res );
+  }
+  
+  return res;
 }
 
 
 //http://mathworld.wolfram.com/HeartCurve.html
 vec2 getHeartPosition(float t){
-	return vec2(16.0 * sin(t) * sin(t) * sin(t),
-							-(13.0 * cos(t) - 5.0 * cos(2.0*t)
-							- 2.0 * cos(3.0*t) - cos(4.0*t)));
+  return vec2(16.0 * sin(t) * sin(t) * sin(t),
+              -(13.0 * cos(t) - 5.0 * cos(2.0*t)
+              - 2.0 * cos(3.0*t) - cos(4.0*t)));
 }
 
 //https://www.shadertoy.com/view/3s3GDn
 float getGlow(float dist, float radius, float intensity){
-	return pow(radius/dist, intensity);
+  return pow(radius/dist, intensity);
 }
 
 float getSegment(float t, vec2 pos, float offset, float scale){
-	for(int i = 0; i < POINT_COUNT; i++){
-		points[i] = getHeartPosition(offset + float(i)*len + fract(speed * t) * 6.28);
-	}
-    
-	vec2 c = (points[0] + points[1]) / 2.0;
-	vec2 c_prev;
-	float dist = 10000.0;
-    
-	for(int i = 0; i < POINT_COUNT-1; i++){
-		//https://tinyurl.com/y2htbwkm
-		c_prev = c;
-		c = (points[i] + points[i+1]) / 2.0;
-		dist = min(dist, sdBezier(pos, scale * c_prev, scale * points[i], scale * c));
-	}
-	return max(0.0, dist);
+  for(int i = 0; i < POINT_COUNT; i++){
+    points[i] = getHeartPosition(offset + float(i)*len + fract(speed * t) * 6.28);
+  }
+  
+  vec2 c = (points[0] + points[1]) / 2.0;
+  vec2 c_prev;
+  float dist = 10000.0;
+  
+  for(int i = 0; i < POINT_COUNT-1; i++){
+    //https://tinyurl.com/y2htbwkm
+    c_prev = c;
+    c = (points[i] + points[i+1]) / 2.0;
+    dist = min(dist, sdBezier(pos, scale * c_prev, scale * points[i], scale * c));
+  }
+  return max(0.0, dist);
 }
 
 void main(){
-	vec2 uv = gl_FragCoord.xy/resolution.xy;
-	float widthHeightRatio = resolution.x/resolution.y;
-	vec2 centre = vec2(0.5, 0.5);
-	vec2 pos = centre - uv;
-	pos.y /= widthHeightRatio;
-	//Shift upwards to centre heart
-	pos.y += 0.02;
-	float scale = 0.000015 * height;
-	
-	float t = time;
+  vec2 uv = gl_FragCoord.xy/resolution.xy;
+  float widthHeightRatio = resolution.x/resolution.y;
+  vec2 centre = vec2(0.5, 0.5);
+  vec2 pos = centre - uv;
+  pos.y /= widthHeightRatio;
+  //Shift upwards to centre heart
+  pos.y += 0.02;
+  float scale = 0.000015 * height;
+  
+  float t = time;
+  
+  //Get first segment
+  float dist = getSegment(t, pos, 0.0, scale);
+  float glow = getGlow(dist, radius, intensity);
+  
+  vec3 col = vec3(0.0);
+  
+  //White core
+  col += 10.0*vec3(smoothstep(0.003, 0.001, dist));
+  //Pink glow
+  col += glow * vec3(0.94,0.14,0.4);
+  
+  //Get second segment
+  dist = getSegment(t, pos, 3.4, scale);
+  glow = getGlow(dist, radius, intensity);
+  
+  //White core
+  col += 10.0*vec3(smoothstep(0.003, 0.001, dist));
+  //Blue glow
+  col += glow * vec3(0.2,0.6,1.0);
     
-	//Get first segment
-	float dist = getSegment(t, pos, 0.0, scale);
-	float glow = getGlow(dist, radius, intensity);
-    
-	vec3 col = vec3(0.0);
-    
-	//White core
-	col += 10.0*vec3(smoothstep(0.003, 0.001, dist));
-	//Pink glow
-	col += glow * vec3(0.94,0.14,0.4);
-    
-	//Get second segment
-	dist = getSegment(t, pos, 3.4, scale);
-	glow = getGlow(dist, radius, intensity);
-    
-	//White core
-	col += 10.0*vec3(smoothstep(0.003, 0.001, dist));
-	//Blue glow
-	col += glow * vec3(0.2,0.6,1.0);
-        
-	//Tone mapping
-	col = 1.0 - exp(-col);
+  //Tone mapping
+  col = 1.0 - exp(-col);
 
-	//Output to screen
- 	gl_FragColor = vec4(col,1.0);
+  //Output to screen
+  gl_FragColor = vec4(col,1.0);
 }
 `;
 
@@ -279,55 +279,67 @@ function draw() {
 
 draw();
 
+// --- BẮT ĐẦU PHẦN LOGIC GIAO DIỆN & NHẠC ---
+
 const modal = document.getElementsByClassName("modal");
 const closeModalBtn = document.getElementsByClassName("close_modal_icon");
 
-// Xử lý màn hình chào mừng
+// --- PHẦN XỬ LÝ NHẠC CHO IPHONE (MỚI) ---
+const audio = document.getElementById("player");
 const startBtn = document.getElementById("startBtn");
 const introOverlay = document.getElementById("intro-overlay");
-const audio = document.getElementById("player");
-// Lưu ý: iPhone sẽ bỏ qua lệnh volume này (âm lượng iPhone ăn theo nút cứng bên hông)
-audio.volume = 0.3;
 
-// --- 1. Xử lý nút "Mở quà" (startBtn) ---
-startBtn.addEventListener("click", () => {
-  // Phát nhạc ngay khi bấm nút
-  audio.play().catch((err) => {
-    console.error("Lỗi phát nhạc khi bấm nút:", err);
-  });
+// Cấu hình nhạc
+audio.loop = true;
+audio.volume = 0.3; // Chỉnh âm lượng (iPhone sẽ bỏ qua cái này)
 
-  // Hiệu ứng ẩn màn hình chào
-  introOverlay.style.opacity = "0";
-  setTimeout(() => {
-    introOverlay.style.display = "none";
-    // textAnimation(0); // Kích hoạt chữ chạy ở đây nếu cần
-  }, 1000);
-});
+// Biến kiểm tra đã phát nhạc chưa
+let isAudioUnlocked = false;
 
-// --- 2. XỬ LÝ ĐẶC BIỆT CHO IPHONE (Auto Unlock) ---
-// Hàm này sẽ "phục kích" mọi cú chạm vào màn hình để bật nhạc nếu nút bấm thất bại
+// Hàm mở khóa âm thanh "thần thánh"
 function unlockAudio() {
-  if (audio.paused) {
-    audio
-      .play()
-      .then(() => {
-        // Nếu nhạc đã phát thành công -> Gỡ bỏ sự kiện để không chạy lại nữa
-        document.removeEventListener("click", unlockAudio);
-        document.removeEventListener("touchstart", unlockAudio);
-      })
-      .catch((error) => {
-        // Kệ lỗi, chờ cú chạm tiếp theo
-      });
-  }
+  if (isAudioUnlocked) return; // Nếu đã phát được rồi thì thôi
+
+  // Thử phát nhạc
+  audio
+    .play()
+    .then(() => {
+      // NẾU THÀNH CÔNG (Mở khóa được)
+      console.log("Đã phát nhạc thành công!");
+      isAudioUnlocked = true;
+
+      // Gỡ bỏ các sự kiện lắng nghe để web nhẹ hơn
+      document.removeEventListener("touchstart", unlockAudio);
+      document.removeEventListener("click", unlockAudio);
+      document.removeEventListener("scroll", unlockAudio);
+    })
+    .catch((error) => {
+      // NẾU THẤT BẠI (Vẫn bị chặn)
+      console.log("Chờ tương tác tiếp theo...");
+    });
 }
 
-// Lắng nghe sự kiện CHẠM (touchstart quan trọng cho iPhone)
-document.addEventListener("touchstart", unlockAudio, { once: true });
+// 1. Xử lý nút "Mở quà" (Ưu tiên số 1)
+if (startBtn) {
+  startBtn.addEventListener("click", () => {
+    unlockAudio();
+    // Ẩn màn hình chào
+    if (introOverlay) {
+      introOverlay.style.opacity = "0";
+      setTimeout(() => {
+        introOverlay.style.display = "none";
+      }, 1000);
+    }
+  });
+}
 
-// Lắng nghe sự kiện CLICK (cho máy tính)
-document.addEventListener("click", unlockAudio, { once: true });
+// 2. "BẪY" SỰ KIỆN TOÀN MÀN HÌNH (Cứu cánh cho iPhone)
+// Bất cứ chạm, click, hay cuộn trang nào cũng sẽ kích hoạt nhạc
+document.addEventListener("touchstart", unlockAudio, { passive: false });
+document.addEventListener("click", unlockAudio);
+document.addEventListener("scroll", unlockAudio);
 
-//random
+// --- PHẦN NỘI DUNG THƯ ---
 const textArr = [
   {
     page: "1",
@@ -352,36 +364,28 @@ const textArr = [
   {
     page: "6",
     text: `Anh sẽ cố gắng để cục dàng không phải chờ anh quá lâu đâu. Valentines vui vẻ nha cục dàng yêu dấu của tuiii. Anh yêu em. Nợ nhau một bủi đi chơi nhá :))))
-			`,
+      `,
   },
-  //   {
-  //     page: "7",
-  //     text: 'Qua những dòng này anh muốn nói là anh thật sự rất yêu cô giáo. . Cùng nhau thật vui vẻ và hạnh phúc ở hiện tại cũng như tương lai nhé. Anh yêu em<i class="icon_heart fa-solid fa-heart" style="font-size: 20px; color: #ae0001"></i>.',
-  //   },
-  // {
-  // 	page: "8",
-  // 	text: "<img src=\"./assets/img/demo.png\" alt=\"photo\" class=\"img\">"
-  // }
 ];
 
 closeModalBtn[0].onclick = () => {
   modal[0].classList.remove("modal_show");
 };
 
+// --- HÀM SAO RƠI ---
 function stars() {
   let e = document.createElement("div");
-  let size = Math.random() * 12; // Kích thước ngẫu nhiên từ 10 đến 20
+  let size = Math.random() * 12;
   let duration = Math.random() * 2;
 
   e.setAttribute("class", "star");
   document.body.appendChild(e);
 
-  // Tính toán vị trí và kích thước phản ứng
-  let randomLeft = Math.random() * 65; // Tính toán vị trí theo phần trăm chiều rộng
-  let randomTop = Math.random() * 1000; // Tính toán vị trí theo phần trăm chiều cao
+  let randomLeft = Math.random() * 65;
+  let randomTop = Math.random() * 1000;
   e.style.left = randomLeft + "%";
   e.style.top = randomTop + "%" - 50;
-  e.style.fontSize = 20 + size + "px"; // Sử dụng viewport width cho kích thước
+  e.style.fontSize = 20 + size + "px";
 
   e.style.animationDuration = 4 + duration + "s";
 
@@ -390,39 +394,36 @@ function stars() {
     const numPage = document.getElementById("num_page");
     const totalPage = document.getElementById("total_page");
 
-    //   button change page
     const prevBtn = document.getElementsByClassName("prev_btn");
     const nextBtn = document.getElementsByClassName("next_btn");
 
+    // Đặt lại trang về 0 khi mở sao
     let count = 0;
-
-    // textLetter.innerHTML = textArr[Math.floor(Math.random() * textArr.length)];
 
     textLetter.innerHTML = textArr[count].text;
     numPage.innerHTML = textArr[count].page;
     totalPage.innerHTML = textArr.length;
+
+    // Gọi hiệu ứng chữ (Đã sửa lỗi)
     textAnimation();
 
+    // Xử lý nút Next
     nextBtn[0].onclick = () => {
-      count = count + 1;
-      if (count < textArr.length) {
+      if (count < textArr.length - 1) {
+        // Sửa logic: chỉ tăng nếu chưa phải trang cuối
+        count++;
         textLetter.innerHTML = textArr[count].text;
         numPage.innerHTML = textArr[count].page;
-        totalPage.innerHTML = textArr.length;
         textAnimation();
-      } else {
-        count = textArr.length - 1;
       }
     };
 
+    // Xử lý nút Prev
     prevBtn[0].onclick = () => {
-      count = count - 1;
-      if (count < 0) {
-        count = 0;
-      } else {
+      if (count > 0) {
+        count--;
         textLetter.innerHTML = textArr[count].text;
         numPage.innerHTML = textArr[count].page;
-        totalPage.innerHTML = textArr.length;
         textAnimation();
       }
     };
@@ -439,14 +440,25 @@ setInterval(function () {
   stars();
 }, 500);
 
+// --- HÀM HIỆU ỨNG CHỮ (ĐÃ SỬA LỖI) ---
 const textAnimation = () => {
-  // text
-  var textWrapper = document.querySelector(".ml14 .letters");
-  textWrapper.innerHTML = textWrapper.textContent.replace(
-    /\S/g,
-    "<span class='letter'>$&</span>",
-  );
+  const textWrapper = document.querySelector(".ml14 .letters");
 
+  // Lấy nội dung trực tiếp từ HTML để tránh lỗi biến
+  const currentHTML = textWrapper.innerHTML;
+
+  // Nếu có thẻ HTML (icon, img) thì KHÔNG chạy replace
+  if (currentHTML.includes("<")) {
+    textWrapper.innerHTML = currentHTML;
+  } else {
+    // Nếu là chữ thường -> chạy hiệu ứng tách chữ
+    textWrapper.innerHTML = textWrapper.textContent.replace(
+      /\S/g,
+      "<span class='letter'>$&</span>",
+    );
+  }
+
+  // Chạy Anime.js
   anime
     .timeline({ loop: false })
     .add({
@@ -457,7 +469,7 @@ const textAnimation = () => {
       duration: 500,
     })
     .add({
-      targets: ".ml14 .letter, .icon_heart",
+      targets: ".ml14 .letter, .ml14 .letters, .icon_heart", // Thêm target để bắt cả cụm
       opacity: [0, 1],
       translateX: [40, 0],
       translateZ: 0,

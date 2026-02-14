@@ -1,31 +1,51 @@
+@media only screen and (min-width: 439px) and (max-width: 441px) {
+  /* CSS riêng cho iPhone 16 Pro Max */
+  .text-wrapper {
+    height: 460px !important;
+  }
+
+  .ml14 {
+    font-size: 34px !important;
+  }
+}
+
 @media (max-width: 739px) {
+  .modal_show {
+    width: 80vw;
+    height: 75vh;
+  }
 
-    .modal_show {
-        width: 80vw;
-        height: 75vh;
+  @keyframes zoom {
+    0% {
+      width: 0;
+      height: 0;
     }
 
-    @keyframes zoom {
-        0% {
-            width: 0;
-            height: 0; 
-        }
-    
-        100% {
-            width: 80vw;
-            height: 75vh;
-        }
+    100% {
+      width: 80vw;
+      height: 75vh;
     }
+  }
 
-    .text-wrapper {
-        height: 350px;
-    }
+  .text-wrapper {
+    height: 370px;
+  }
 
-    .ml14 {
-        font-size: 28px;
-    }
+  .ml14 {
+    font-size: 28px;
+  }
 
-    .footer {
-        margin-top: 35px;
-    } 
+  .footer {
+    margin-top: 35px;
+  }
+}
+
+@media (max-height: 700px) {
+  .text-wrapper {
+    height: 260px;
+  }
+
+  .ml14 {
+    font-size: 24px;
+  }
 }

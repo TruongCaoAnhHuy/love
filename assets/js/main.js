@@ -216,11 +216,11 @@ var sound = new Howl({
   html5: true, // Bắt buộc cho mobile
 
   // SỰ KIỆN QUAN TRỌNG: Khi hát xong (onend)
-  onend: function () {
-    console.log("Đã hát xong, đang tua lại...");
-    // Nếu iPhone không tự loop, dòng này sẽ ép nó hát lại ngay lập tức
-    sound.play();
-  },
+  // onend: function () {
+  //   console.log("Đã hát xong, đang tua lại...");
+  //   // Nếu iPhone không tự loop, dòng này sẽ ép nó hát lại ngay lập tức
+  //   sound.play();
+  // },
 
   onplay: function () {
     console.log("Howler: Nhạc đang phát!");

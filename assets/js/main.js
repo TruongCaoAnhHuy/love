@@ -204,21 +204,27 @@ const closeModalBtn = document.querySelector(".close_modal_icon");
 // --- CẤU HÌNH NHẠC BẰNG HOWLER.JS (GIẢI PHÁP MẠNH NHẤT CHO IPHONE) ---
 
 // 1. Khai báo file nhạc
+// 1. Cấu hình Howler
 var sound = new Howl({
-  src: ["./assets/audios/buicongnam.mp3"], // Đảm bảo đường dẫn đúng và là file .mp3
+  src: ["./assets/audios/buicongnamILOVEYOU.mp3"],
+  format: ["mp3"], // <--- THÊM DÒNG NÀY: Ép buộc trình duyệt hiểu đây là mp3
   autoplay: false,
   loop: true,
-  volume: 0.5,
-  html5: true, // Quan trọng: Giúp phát file lớn mượt hơn trên di động
+  volume: 0.3,
+  html5: true, // Bắt buộc giữ dòng này cho iPhone
   onplay: function () {
-    console.log("Nhạc đang phát!");
+    console.log("Howler: Nhạc đang phát!");
   },
   onloaderror: function (id, error) {
-    console.log("Lỗi tải file nhạc:", error);
-    alert("Không tìm thấy file nhạc! Hãy kiểm tra lại đường dẫn.");
+    // In lỗi chi tiết ra để xem
+    console.log("Lỗi tải file:", error);
+    alert(
+      "Lỗi tải nhạc (iOS): " +
+        error +
+        ". Hãy chắc chắn bạn đã convert file sang MP3 chuẩn chứ không phải đổi tên đuôi file.",
+    );
   },
   onplayerror: function (id, error) {
-    console.log("Lỗi phát nhạc:", error);
     sound.once("unlock", function () {
       sound.play();
     });

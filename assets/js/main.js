@@ -286,62 +286,46 @@ const closeModalBtn = document.getElementsByClassName("close_modal_icon");
 const startBtn = document.getElementById("startBtn");
 const introOverlay = document.getElementById("intro-overlay");
 const audio = document.getElementById("player");
-
+// Lưu ý: iPhone sẽ bỏ qua lệnh volume này (âm lượng iPhone ăn theo nút cứng bên hông)
 audio.volume = 0.3;
 
+// --- 1. Xử lý nút "Mở quà" (startBtn) ---
 startBtn.addEventListener("click", () => {
-  // 1. Phát nhạc ngay lập tức (Trình duyệt cho phép vì người dùng đã click)
-  audio
-    .play()
-    .then(() => {
-      console.log("Nhạc đang phát!");
-    })
-    .catch((err) => {
-      console.error("Lỗi phát nhạc:", err);
-    });
+  // Phát nhạc ngay khi bấm nút
+  audio.play().catch((err) => {
+    console.error("Lỗi phát nhạc khi bấm nút:", err);
+  });
 
-  // 2. Làm mờ và ẩn màn hình chào
+  // Hiệu ứng ẩn màn hình chào
   introOverlay.style.opacity = "0";
-
-  // Đợi 1 giây cho hiệu ứng mờ chạy xong rồi mới ẩn hẳn div
   setTimeout(() => {
     introOverlay.style.display = "none";
-
-    // Kích hoạt hiệu ứng WebGL hoặc Animation chữ (nếu cần)
-    // Ví dụ: textAnimation(0);
+    // textAnimation(0); // Kích hoạt chữ chạy ở đây nếu cần
   }, 1000);
 });
 
-// nhạc
-// --- PHẦN XỬ LÝ NHẠC NỀN ---
+// --- 2. XỬ LÝ ĐẶC BIỆT CHO IPHONE (Auto Unlock) ---
+// Hàm này sẽ "phục kích" mọi cú chạm vào màn hình để bật nhạc nếu nút bấm thất bại
+function unlockAudio() {
+  if (audio.paused) {
+    audio
+      .play()
+      .then(() => {
+        // Nếu nhạc đã phát thành công -> Gỡ bỏ sự kiện để không chạy lại nữa
+        document.removeEventListener("click", unlockAudio);
+        document.removeEventListener("touchstart", unlockAudio);
+      })
+      .catch((error) => {
+        // Kệ lỗi, chờ cú chạm tiếp theo
+      });
+  }
+}
 
-// 1. Cố gắng phát ngay lập tức khi tải trang
-window.onload = function () {
-  audio.play().catch((error) => {
-    console.log("Trình duyệt chặn autoplay, chờ tương tác...");
-  });
-};
+// Lắng nghe sự kiện CHẠM (touchstart quan trọng cho iPhone)
+document.addEventListener("touchstart", unlockAudio, { once: true });
 
-// 2. Mẹo: Bắt sự kiện click/chạm đầu tiên vào BẤT CỨ ĐÂU trên trang để phát nhạc
-document.addEventListener(
-  "click",
-  function () {
-    if (audio.paused) {
-      audio.play();
-    }
-  },
-  { once: true },
-); // Chỉ cần chạy 1 lần là đủ
-
-document.addEventListener(
-  "touchstart",
-  function () {
-    if (audio.paused) {
-      audio.play();
-    }
-  },
-  { once: true },
-);
+// Lắng nghe sự kiện CLICK (cho máy tính)
+document.addEventListener("click", unlockAudio, { once: true });
 
 //random
 const textArr = [
@@ -363,7 +347,7 @@ const textArr = [
   },
   {
     page: "5",
-    text: "Anh thật sự yêu em nhiều lắm, hong hứa gì cả vì anh sợ lắm, anh	 sợ nói trước bước không qua, sợ anh không làm được... Anh chỉ mong rằng là mình sẽ quên hết những quá khứ không vui, yêu nhau trọn vẹn ở hiện tại và cố gắng cùng nhau tới tương lai.",
+    text: "Anh thật sự yêu em nhiều lắm, hong hứa gì cả vì anh sợ lắm, anh sợ nói trước bước không qua, sợ anh không làm được... Anh chỉ mong rằng là mình sẽ quên hết những điều không vui của quá khứ, yêu nhau trọn vẹn ở hiện tại và cố gắng cùng nhau tới tương lai.",
   },
   {
     page: "6",

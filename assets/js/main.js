@@ -200,41 +200,43 @@ draw();
 
 const modal = document.querySelector(".modal");
 const closeModalBtn = document.querySelector(".close_modal_icon");
-const audio = document.getElementById("player");
+
+// --- CẤU HÌNH NHẠC BẰNG HOWLER.JS (GIẢI PHÁP MẠNH NHẤT CHO IPHONE) ---
+
+// 1. Khai báo file nhạc
+var sound = new Howl({
+  src: ["./assets/audios/buicongnam.mp3"], // Đảm bảo đường dẫn đúng và là file .mp3
+  autoplay: false,
+  loop: true,
+  volume: 0.5,
+  html5: true, // Quan trọng: Giúp phát file lớn mượt hơn trên di động
+  onplay: function () {
+    console.log("Nhạc đang phát!");
+  },
+  onloaderror: function (id, error) {
+    console.log("Lỗi tải file nhạc:", error);
+    alert("Không tìm thấy file nhạc! Hãy kiểm tra lại đường dẫn.");
+  },
+  onplayerror: function (id, error) {
+    console.log("Lỗi phát nhạc:", error);
+    sound.once("unlock", function () {
+      sound.play();
+    });
+  },
+});
+
+// 2. Xử lý nút Mở Quà
 const startBtn = document.getElementById("startBtn");
 const introOverlay = document.getElementById("intro-overlay");
 
-// Cấu hình nhạc
-audio.loop = true;
-audio.volume = 0.5;
-
-// Hàm mở khóa âm thanh
-function unlockAudio() {
-  // Thử phát nhạc
-  audio
-    .play()
-    .then(() => {
-      console.log("Đã phát nhạc thành công!");
-      // Nếu phát được thì gỡ sự kiện touchstart để đỡ nặng
-      document.removeEventListener("touchstart", unlockAudio);
-    })
-    .catch((error) => {
-      console.log(
-        "Chưa phát được nhạc (lỗi trình duyệt chặn), đợi tương tác tiếp theo...",
-      );
-    });
-}
-
-// 1. KHI BẤM NÚT "MỞ QUÀ"
 if (startBtn) {
-  startBtn.addEventListener("click", () => {
-    // Phát nhạc
-    unlockAudio();
+  startBtn.addEventListener("click", function () {
+    // Phát nhạc ngay lập tức
+    sound.play();
 
-    // Ẩn màn hình chào
+    // Hiệu ứng ẩn màn hình chào
     if (introOverlay) {
       introOverlay.style.opacity = "0";
-      // Đợi 1 giây hiệu ứng mờ rồi mới ẩn hẳn
       setTimeout(() => {
         introOverlay.style.display = "none";
       }, 1000);
@@ -242,10 +244,19 @@ if (startBtn) {
   });
 }
 
-// 2. BACKUP: BẮT SỰ KIỆN CHẠM MÀN HÌNH (DÀNH CHO IPHONE NẾU NÚT BẤM LỖI)
-// Chỉ cần chạm vào bất cứ đâu sau khi tải trang, nhạc sẽ thử phát
-document.addEventListener("touchstart", unlockAudio, { once: true });
-document.addEventListener("click", unlockAudio, { once: true });
+// 3. BACKUP: Chạm màn hình để mở khóa âm thanh (dành cho iOS cứng đầu)
+// Howler.js tự động xử lý việc này, nhưng thêm 1 dòng này để chắc chắn 100%
+document.addEventListener(
+  "touchstart",
+  function () {
+    if (Howler.ctx && Howler.ctx.state === "suspended") {
+      Howler.ctx.resume().then(() => {
+        console.log("Đã mở khóa AudioContext cho iPhone");
+      });
+    }
+  },
+  { once: true },
+);
 
 // ---------------------------------------------------------
 // --- PHẦN NỘI DUNG BỨC THƯ ---
